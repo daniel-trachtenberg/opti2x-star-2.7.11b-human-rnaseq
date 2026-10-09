@@ -16,7 +16,7 @@ void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, ui
     if (iA>=nA) {//no more aligns to add, finalize the transcript
 
         //extend first
-        Transcript trAstep1;
+        static Transcript trAstep1; // HH4: NLWP=1 reuse; avoid per-finalize vector/set ctor
 
         int vOrder[2]; //decide in which order to extend: extend the 5' of the read first
 
@@ -314,29 +314,83 @@ void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, ui
     static int trAiDepth = -1;
     struct TrAiDepthGuard { int &d; TrAiDepthGuard(int& x):d(x){ ++d; } ~TrAiDepthGuard(){ --d; } } _trAiGuard(trAiDepth);
     Transcript &trAi = trAiPool[trAiDepth < 128 ? trAiDepth : 127];
-    trAi.copyStitchCore(trA);
-    if (trA.nExons>0) {//stitch, a transcript has already been originated
 
-        dScore=stitchAlignToTranscript(tR2, tG2, WA[iA][WA_rStart], WA[iA][WA_gStart], WA[iA][WA_Length], WA[iA][WA_iFrag],  WA[iA][WA_sjA], P, R, mapGen, &trAi, RA->outFilterMismatchNmaxTotal);
-        //TODO check if the new stitching creates too many MM, quit this transcript if so
+    // HH4: geometric prefilter matching stitchAlign early rejects — skip copyStitchCore when include is impossible
+    bool tryInclude = true;
+    if (trA.nExons >= MAX_N_EXONS) {
+        tryInclude = false;
+        dScore = -1000010;
+    } else if (trA.nExons > 0 && !( WA[iA][WA_sjA]!=((uint) -1) && trA.exons[trA.nExons-1][EX_sjA]==WA[iA][WA_sjA] \
+                && trA.exons[trA.nExons-1][EX_iFrag]==WA[iA][WA_iFrag] && WA[iA][WA_rStart]==tR2+1 && tG2+1<WA[iA][WA_gStart] ) ) {
+        // (sjdb simple-stitch path in stitchAlignToTranscript is taken before geometric checks: never prefilter it)
+        const uint rBstart = WA[iA][WA_rStart];
+        const uint gBstart = WA[iA][WA_gStart];
+        const uint Lb = WA[iA][WA_Length];
+        const uint iFragB = WA[iA][WA_iFrag];
+        const uint rBend = rBstart + Lb - 1;
+        const uint gBend = gBstart + Lb - 1;
+        if (trA.exons[trA.nExons-1][EX_iFrag] == iFragB) {
+            // same-fragment geometric rejects from stitchAlignToTranscript (-1000001/-1000002)
+            if (rBend <= tR2) {
+                tryInclude = false;
+                dScore = -1000001;
+            } else if (gBend <= tG2) {
+                tryInclude = false;
+                dScore = -1000002;
+            } else if (P.alignIntronMax > 0) {
+                // after r-overlap shift, Del = gGap - rGap; reject if Del > alignIntronMax
+                uint rB0 = rBstart, gB0 = gBstart;
+                if (rB0 <= tR2) {
+                    gB0 += tR2 - rB0 + 1;
+                    rB0 = tR2 + 1;
+                }
+                const int gGap = gB0 - tG2 - 1; // same narrowing as stitchAlignToTranscript
+                const int rGap = rB0 - tR2 - 1;
+                if (gGap > rGap) {
+                    const uint Del = (uint)(gGap - rGap);
+                    if (Del > P.alignIntronMax) {
+                        tryInclude = false;
+                        dScore = -1000003;
+                    }
+                }
+            }
+        } else {
+            // mate-gap path: large mates gap reject (-1000004)
+            if (P.alignMatesGapMax > 0 && gBstart > trA.exons[trA.nExons-1][EX_G] + trA.exons[trA.nExons-1][EX_L] + P.alignMatesGapMax) {
+                tryInclude = false;
+                dScore = -1000004;
+            } else if (!(gBstart + trA.exons[0][EX_R] + P.alignEndsProtrude.nBasesMax >= trA.exons[0][EX_G] || trA.exons[0][EX_G] < trA.exons[0][EX_R])) {
+                tryInclude = false;
+                dScore = -1000008;
+            }
+        }
+    }
 
-    } else { //this is the first align in the transcript
-            trAi.exons[0][EX_R]=trAi.rStart=WA[iA][WA_rStart]; //transcript start/end
-            trAi.exons[0][EX_G]=trAi.gStart=WA[iA][WA_gStart];
-            trAi.exons[0][EX_L]=WA[iA][WA_Length];
-            trAi.exons[0][EX_iFrag]=WA[iA][WA_iFrag];
-            trAi.exons[0][EX_sjA]=WA[iA][WA_sjA];
+    if (tryInclude) {
+        trAi.copyStitchCore(trA);
+        if (trA.nExons>0) {//stitch, a transcript has already been originated
 
-            trAi.nExons=1; //recorded first exon
+            dScore=stitchAlignToTranscript(tR2, tG2, WA[iA][WA_rStart], WA[iA][WA_gStart], WA[iA][WA_Length], WA[iA][WA_iFrag],  WA[iA][WA_sjA], P, R, mapGen, &trAi, RA->outFilterMismatchNmaxTotal);
+            //TODO check if the new stitching creates too many MM, quit this transcript if so
 
-            dScore += (int)WA[iA][WA_Length] * scoreMatch; // HH1 closed-form; scoreMatch constant
+        } else { //this is the first align in the transcript
+                trAi.exons[0][EX_R]=trAi.rStart=WA[iA][WA_rStart]; //transcript start/end
+                trAi.exons[0][EX_G]=trAi.gStart=WA[iA][WA_gStart];
+                trAi.exons[0][EX_L]=WA[iA][WA_Length];
+                trAi.exons[0][EX_iFrag]=WA[iA][WA_iFrag];
+                trAi.exons[0][EX_sjA]=WA[iA][WA_sjA];
 
-            trAi.nMatch=WA[iA][WA_Length]; //# of matches
+                trAi.nExons=1; //recorded first exon
 
-            for (uint ii=0; ii<nA; ii++) WAincl[ii]=false;
+                dScore += (int)WA[iA][WA_Length] * scoreMatch; // HH1 closed-form; scoreMatch constant
+
+                trAi.nMatch=WA[iA][WA_Length]; //# of matches
+
+                for (uint ii=0; ii<nA; ii++) WAincl[ii]=false;
 
 
-    };
+        };
+    }
 
     if (dScore>-1000000) {//include this align
         WAincl[iA]=true;

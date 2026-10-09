@@ -110,6 +110,13 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
                 int maxScore2=-999999;
                 Score1=0;
                 int jPen=0;
+                // HH4: optimistic upper bound on jPen1 for the early-stop (no motif penalty when Del<alignIntronMin)
+                int maxPenUB = 0;
+                if (Del>=P.alignIntronMin) {
+                    maxPenUB = max(maxPenUB, (int)P.scoreGapGCAG);
+                    maxPenUB = max(maxPenUB, (int)P.scoreGapATAC);
+                    maxPenUB = max(maxPenUB, (int)P.scoreGapNoncan);
+                };
                 do { // 2. scan to the right to find the best junction locus
                     // ?TODO? if genome base is N, how to score?
                     if  ( R[rAend+jR1]==G[gAend+jR1] && R[rAend+jR1]!=G[gBstart1+jR1] )  Score1+=scoreMatch;
@@ -151,8 +158,19 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
                         jCan=jCan1;
                         jPen=jPen1;
                     };
+                    // HH4: score-equivalent early-stop. Per step Score1 changes by at most +scoreMatch
+                    // (the two updates are mutually exclusive); Score2<=Score1+maxPenUB where maxPenUB is the
+                    // largest possible motif penalty (0 when all penalties <=0, the default). If even the
+                    // optimistic bound cannot strictly exceed maxScore2, no later locus can replace the best
+                    // (update requires strict <), so the chosen jR/jCan/jPen are identical.
+                    {
+                        int rem = int(rBend) - int(rAend) - 1 - jR1;
+                        if (rem > 0 && Score1 + scoreMatch * rem + maxPenUB <= maxScore2) {
+                            break;
+                        };
+                    };
                         jR1++;
-                } while ( jR1 < int(rBend) - int(rAend) );// - int(P.alignSJoverhangMin) );//TODO: do not need to search the full B-transcript, can stop as soon as Score goes down by more than
+                } while ( jR1 < int(rBend) - int(rAend) );// - int(P.alignSJoverhangMin) );// HH4: early-stop bound above
 
                 //repeat length: go back and forth around jR to find repeat length
                 uint jjL=0,jjR=0;
