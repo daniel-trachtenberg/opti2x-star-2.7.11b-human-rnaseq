@@ -18,3 +18,14 @@ GSE26248 (cited by Prof. Zhang) is *Mus musculus* retina, not human; it is a sec
 
 Reports, patch, attestation, evidence and scripts: `opti2x/`. Build: `cd source && make STAR`.
 The earlier fixture-era repo `opti2x-star-2.7.11b` (NOT_YET claim) is left unchanged.
+
+## GSE26248 (SRR327045) — final certified build (HH1+HH4)
+
+Re-run of the final certified build vs stock STAR 2.7.11b on Zhang's dataset (GSE26248, mouse retina, SRR327045, 200k PE reads, mm10 chr1+2+19 index), same serial envelope (`--runThreadN 1`, OMP=1, `taskset -c 0`, NoSharedMemory, warm cache), N=30 paired rounds (seed 20261008):
+
+- Baseline median wall: 280.7 s; optimized median: 193.0 s
+- **Median paired speedup 1.458×**, mean-log 1.460×, one-sided lower 95% bound 1.455×
+- Output equivalence: sorted BAM body identical + Log.final.out stats identical on rounds 1 and 30
+- Evidence: `opti2x/evidence/gse26248_mouse_hh4/`
+
+This supersedes the earlier 1.39× mouse figure (which used the earlier public build). The human ≥2× claim (2.18×) is separate; see above.

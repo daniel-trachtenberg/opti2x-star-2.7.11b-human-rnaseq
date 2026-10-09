@@ -1,0 +1,63 @@
+seed=20261008 N=30 reads=SRR327045_sub200000 PE genome=mm10_chr1_2_19 lab_a=baseline lab_b=hh4
+envelope: runThreadN=1 OMP_NUM_THREADS=1 OMP_THREAD_LIMIT=1 taskset -c 0 genomeLoad=NoSharedMemory warm-cache outSAMtype=BAM Unsorted outSAMunmapped=Within
+host: Linux 6.12.94+ x86_64 cpu=Intel(R) Xeon(R) Processor nproc=8
+0f7b41f13bcaaea4168512f4fc57e7b1eab955e83aa6ace399198d2b3f3fcb08  /workspace/opti2x/runs/star-2.7.11b-human-rnaseq/baseline/STAR
+e6d576dccaed247aeca539b7d20f862b9db1d505f4b146624b72bc23589fde3f  /workspace/opti2x/runs/star-2.7.11b-human-rnaseq/deliverable-QUALIFIED/STAR.hh4
+start=2026-10-08T23:44:21-07:00
+WARMUP baseline
+warmup_baseline_s=327.570333
+1	B_then_A	284.564852	195.680911	1.454229	OK
+2	A_then_B	285.063660	196.035360	1.454144	SKIP
+3	B_then_A	287.350220	196.929869	1.459150	SKIP
+4	A_then_B	284.719654	193.666480	1.470155	SKIP
+5	A_then_B	283.419338	193.507909	1.464640	SKIP
+6	B_then_A	279.913634	193.572720	1.446039	SKIP
+7	A_then_B	283.264944	194.431165	1.456891	SKIP
+8	A_then_B	286.567368	197.167355	1.453422	SKIP
+9	B_then_A	283.530944	191.328753	1.481905	SKIP
+10	A_then_B	284.079480	193.459485	1.468418	SKIP
+11	B_then_A	285.741761	194.914822	1.465983	SKIP
+12	A_then_B	283.881671	195.952521	1.448727	SKIP
+13	B_then_A	280.619181	193.096548	1.453258	SKIP
+14	A_then_B	277.142728	193.312453	1.433652	SKIP
+15	B_then_A	278.724542	190.336925	1.464375	SKIP
+16	B_then_A	279.108320	192.835575	1.447390	SKIP
+17	A_then_B	281.149603	191.103476	1.471190	SKIP
+18	A_then_B	278.823321	192.202524	1.450675	SKIP
+19	B_then_A	280.533576	190.871782	1.469749	SKIP
+20	B_then_A	281.265559	194.126166	1.448880	SKIP
+21	A_then_B	275.071785	194.242933	1.416122	SKIP
+22	A_then_B	277.934923	190.299687	1.460512	SKIP
+23	A_then_B	277.239988	191.751239	1.445832	SKIP
+24	B_then_A	278.477260	189.657794	1.468314	SKIP
+25	B_then_A	276.629664	190.083169	1.455309	SKIP
+26	B_then_A	277.900611	191.284074	1.452816	SKIP
+27	B_then_A	280.840096	189.331185	1.483327	SKIP
+28	B_then_A	275.410804	185.134628	1.487624	SKIP
+29	A_then_B	283.225386	186.949951	1.514980	SKIP
+30	A_then_B	275.069023	187.624397	1.466062	OK
+{
+  "track": "GSE26248_mouse_retina",
+  "run": "SRR327045",
+  "reads_pe": 200000,
+  "genome": "mm10_chr1_2_19",
+  "baseline_label": "baseline",
+  "optimized_label": "hh4",
+  "N": 30,
+  "N_planned": 30,
+  "seed": 20261008,
+  "baseline_median_s": 280.7296385,
+  "optimized_median_s": 192.96606150000002,
+  "median_x": 1.4580205,
+  "exp_mean_log_x": 1.4603552017375587,
+  "lower_95_x": 1.454877269921174,
+  "sd_log": 0.01211478256408436,
+  "t_crit_one_sided_95": 1.6991,
+  "oracle_rounds": {
+    "1": "OK",
+    "30": "OK"
+  },
+  "equivalence_all_ok": true,
+  "envelope": "serial runThreadN=1 OMP=1 taskset -c 0 NoSharedMemory warm-cache"
+}
+DONE

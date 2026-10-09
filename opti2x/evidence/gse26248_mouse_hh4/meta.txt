@@ -1,0 +1,10 @@
+seed=20261008 N=30 reads=SRR327045_sub200000 PE genome=mm10_chr1_2_19 lab_a=baseline lab_b=hh4
+envelope: runThreadN=1 OMP_NUM_THREADS=1 OMP_THREAD_LIMIT=1 taskset -c 0 genomeLoad=NoSharedMemory warm-cache outSAMtype=BAM Unsorted outSAMunmapped=Within
+host: Linux 6.12.94+ x86_64 cpu=Intel(R) Xeon(R) Processor nproc=8
+0f7b41f13bcaaea4168512f4fc57e7b1eab955e83aa6ace399198d2b3f3fcb08  /workspace/opti2x/runs/star-2.7.11b-human-rnaseq/baseline/STAR
+e6d576dccaed247aeca539b7d20f862b9db1d505f4b146624b72bc23589fde3f  /workspace/opti2x/runs/star-2.7.11b-human-rnaseq/deliverable-QUALIFIED/STAR.hh4
+start=2026-10-08T23:44:21-07:00
+WARMUP baseline
+warmup_baseline_s=327.570333
+orders=1 0 1 0 0 1 0 0 1 0 1 0 1 0 1 1 0 0 1 1 0 0 0 1 1 1 1 1 0 0
+end=2026-10-09T03:46:32-07:00

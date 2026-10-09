@@ -1,0 +1,42 @@
+tag=r30
+bam_records_baseline=406368
+bam_records_hh4=406368
+sorted_body_sha256_baseline=ad44b9d2cefbbcbc07e3ef8e08caf33c14d77da0949e7ef0ae792c9e3a8a23c6
+sorted_body_sha256_hh4=ad44b9d2cefbbcbc07e3ef8e08caf33c14d77da0949e7ef0ae792c9e3a8a23c6
+sorted_bam_body_identical=OK
+log_final_mapping_stats_identical=OK
+sj_out_tab_identical=OK
+--- baseline Log.final.out (stats) ---
+
+                          Number of input reads |	200000
+                      Average input read length |	240
+                                    UNIQUE READS:
+                   Uniquely mapped reads number |	34557
+                        Uniquely mapped reads % |	17.28%
+                          Average mapped length |	230.95
+                       Number of splices: Total |	13603
+            Number of splices: Annotated (sjdb) |	0
+                       Number of splices: GT/AG |	13315
+                       Number of splices: GC/AG |	151
+                       Number of splices: AT/AC |	13
+               Number of splices: Non-canonical |	124
+                      Mismatch rate per base, % |	0.83%
+                         Deletion rate per base |	0.02%
+                        Deletion average length |	2.30
+                        Insertion rate per base |	0.02%
+                       Insertion average length |	2.14
+                             MULTI-MAPPING READS:
+        Number of reads mapped to multiple loci |	1686
+             % of reads mapped to multiple loci |	0.84%
+        Number of reads mapped to too many loci |	117
+             % of reads mapped to too many loci |	0.06%
+                                  UNMAPPED READS:
+  Number of reads unmapped: too many mismatches |	0
+       % of reads unmapped: too many mismatches |	0.00%
+            Number of reads unmapped: too short |	161997
+                 % of reads unmapped: too short |	81.00%
+                Number of reads unmapped: other |	1643
+                     % of reads unmapped: other |	0.82%
+                                  CHIMERIC READS:
+                       Number of chimeric reads |	0
+                            % of chimeric reads |	0.00%

@@ -50,13 +50,13 @@ Workload: 200000 PE reads from SRR327045; index mm10_chr1_2_19.
 | 2 | 298.102 | 219.152 | 1.360 |
 | 3 | 300.741 | 214.424 | 1.403 |
 
-- **Median paired speedup: 1.392×** (≈ +39%, not ~8%)
+- **Median paired speedup: 1.392×** (≈ +39%, not ~8%) — earlier public build. **Final certified build (HH1+HH4): 1.458× median, N=30, lower_95 1.455×, outputs identical** (see `evidence/gse26248_mouse_hh4/`).
 - Unique map: 17.28% (36243 reads); 81% “too short” (chrom-subset limitation)
 - Oracle spot-check: unique/multi counts identical baseline vs candidate
 
 ### Interpretation vs Zhang’s ~8%
 
-Zhang’s ~1.08× likely used different genome breadth, read depth, threading, or binary/build. Under this serial fair envelope on a chrom-subset of the cited GEO accession, the published Opti2x candidate is **substantially faster than 8%** (~1.39×). That does **not** yet establish ≥2× on a human primary contract.
+Zhang’s ~1.08× likely used different genome breadth, read depth, threading, or binary/build. Under this serial fair envelope on a chrom-subset of the cited GEO accession, the published Opti2x candidate is **substantially faster than 8%** (~1.39× earlier build; **1.46× final build**). That does **not** yet establish ≥2× on a human primary contract.
 
 ## Human results — N=3 paired after 1 warmup
 
