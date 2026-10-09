@@ -309,7 +309,11 @@ void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, ui
 
     ///////////////////////////////////////////////////////////////////////////////////
     int dScore=0;
-    Transcript trAi; //trA stitch-core copy with this align included
+    // HH1: recursive fork pool (H20) — avoid per-node Transcript default-ctor of vectors/set
+    static Transcript trAiPool[128];
+    static int trAiDepth = -1;
+    struct TrAiDepthGuard { int &d; TrAiDepthGuard(int& x):d(x){ ++d; } ~TrAiDepthGuard(){ --d; } } _trAiGuard(trAiDepth);
+    Transcript &trAi = trAiPool[trAiDepth < 128 ? trAiDepth : 127];
     trAi.copyStitchCore(trA);
     if (trA.nExons>0) {//stitch, a transcript has already been originated
 
@@ -325,7 +329,7 @@ void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, ui
 
             trAi.nExons=1; //recorded first exon
 
-            for (uint ii=0;ii<WA[iA][WA_Length];ii++) dScore+=scoreMatch; //sum all the scores
+            dScore += (int)WA[iA][WA_Length] * scoreMatch; // HH1 closed-form; scoreMatch constant
 
             trAi.nMatch=WA[iA][WA_Length]; //# of matches
 

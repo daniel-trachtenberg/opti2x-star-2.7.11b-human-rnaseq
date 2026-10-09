@@ -30,7 +30,7 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
         trA->sjStr[trA->nExons-1]=mapGen.sjdbStrand[sjAB];;
         trA->nExons++;
         trA->nMatch+=L;
-        for (uint ii=rBstart;ii<rBstart+L;ii++) Score+=scoreMatch; //add QS for mapped portions
+        Score += (intScore)L * scoreMatch; // closed-form; scoreMatch constant
         Score+=P.pGe.sjdbScore;
     } else {//general stitching
         trA->sjAnnot[trA->nExons-1]=0;
@@ -60,7 +60,7 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
                 L=rBend-rBstart+1;
             };
 
-            for (uint ii=rBstart;ii<=rBend;ii++) Score+=scoreMatch; //add QS for mapped portions
+            Score += (intScore)(rBend - rBstart + 1) * scoreMatch; // closed-form mapped B
 
             int gGap=gBstart-gAend-1; //could be < 0 for insertions
             int rGap=rBstart-rAend-1;//>0 always since we removed overlap
@@ -79,15 +79,14 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
                 //do nothing for now
             } else if ( gGap>0 && rGap>0 && rGap==gGap ) {//no gaps, just try to fill space
                 //simple stitching, assuming no insertion in the read
-
-                for (int ii=1;ii<=rGap;ii++) {
-                    if (G[gAend+ii]<4 && R[rAend+ii]<4) {//only score genome bases that are not Ns
-                        if ( R[rAend+ii]==G[gAend+ii] ) {
-                            Score+=scoreMatch;
-                            nMatch++;
-                        } else {
-                            Score-=scoreMatch;
-                            nMM++;
+                // HH1: pointer walk (same comparisons/order as indexed loop)
+                {
+                    char *Rp = R + rAend + 1;
+                    char *Gp = G + gAend + 1;
+                    for (int ii=1; ii<=rGap; ii++, ++Rp, ++Gp) {
+                        if (*Gp<4 && *Rp<4) {
+                            if ( *Rp==*Gp ) { Score+=scoreMatch; nMatch++; }
+                            else { Score-=scoreMatch; nMM++; };
                         };
                     };
                 };
@@ -259,9 +258,7 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
                     jR=0;
                 } else if (gGap<0) {//overlapping seeds: reduce the score
                     jR=0;
-                    for (int ii=0; ii<-gGap; ii++) {
-                        Score -= scoreMatch;
-                    };
+                    Score -= (intScore)(-gGap) * scoreMatch; // closed-form
                 } else {//stitch: define the exon boundary jR
                     int Score1=0; int maxScore1=0;
                     for (int jR1=1;jR1<=gGap;jR1++) {//scan to the right to find the best score
@@ -357,9 +354,9 @@ intScore stitchAlignToTranscript(uint rAend, uint gAend, uint rBstart, uint gBst
             //extend the fragments inside
             //note, that this always works, i.e. Score>0
 
-            for (uint ii=rBstart;ii<rBstart+L;ii++) Score+=scoreMatch; //add QS for mapped portions
+            Score += (intScore)L * scoreMatch; // closed-form mapped B (mate stitch)
 
-            Transcript trExtend;
+            static Transcript trExtend; // HH1: NLWP=1 reuse; avoid per-call vector ctor
 
             //TODO: compare extensions to the left and right, pick the best one to be performed first
             //otherwise if a large nMM is reached in the 2st extension, it will prevent the 2nd extension
