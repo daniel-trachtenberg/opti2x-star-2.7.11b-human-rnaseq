@@ -61,6 +61,9 @@ public:
     std::set <uint32> alignGenes;
 
     Transcript(); //resets to 0
+    Transcript(const Transcript& t);
+    Transcript& operator=(const Transcript& t);
+    void copyStitchCore(const Transcript& t); // scalars+exons/SJ only; no containers
     void reset(); //reset to 0
     void resetMapG(); // reset map to 0
     void resetMapG(uint); // reset map to 0 for Lread bases

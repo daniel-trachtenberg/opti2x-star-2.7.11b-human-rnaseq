@@ -56,6 +56,12 @@ if (extendToEnd) {//end to end extension
 };
 
 
+// Hoist constant mismatch break budget (was recomputed every MM iteration).
+// Break when nMM+nMMprev >= min(pMMmax*(Lprev+L), nMMmax) — L fixed in this call.
+const double mmBreakD = (pMMmax * double(Lprev + L) < double(nMMmax))
+    ? (pMMmax * double(Lprev + L)) : double(nMMmax);
+const uint mmBreak = (uint)mmBreakD; // floor; matches prior min(...) then >= compare semantics for typical values
+
 for (int i=0;i<(int) L;i++) {
     iS=dR*i;
     iG=dG*i;
@@ -67,7 +73,10 @@ for (int i=0;i<(int) L;i++) {
         nMatch++;
         Score += scoreMatch;
         if (Score>trA->maxScore) {//record new maximum
-            if (nMM+nMMprev <= min(pMMmax*double(Lprev+i+1), double(nMMmax)) ) {//check nMM, if too many mismatches - do not record this maximum. Do not break - there might be still hope to make a long extension
+            // nMM+nMMprev <= min(pMMmax*(Lprev+i+1), nMMmax)
+            const double lim = (pMMmax * double(Lprev+i+1) < double(nMMmax))
+                ? (pMMmax * double(Lprev+i+1)) : double(nMMmax);
+            if (nMM+nMMprev <= lim ) {//check nMM, if too many mismatches - do not record this maximum. Do not break - there might be still hope to make a long extension
                 trA->extendL=i+1;
                 trA->maxScore=Score;
                 trA->nMatch=nMatch;
@@ -75,7 +84,7 @@ for (int i=0;i<(int) L;i++) {
             };
         };
     } else {//MM
-        if (nMM+nMMprev >= min(pMMmax*double(Lprev+L), double(nMMmax)) ) {//there is no hope to extend it further, break
+        if (nMM+nMMprev >= mmBreak ) {//there is no hope to extend it further, break
             break;
         };
 
@@ -90,4 +99,3 @@ bool extDone =  trA->extendL > 0;
 return extDone;
 
 };
-

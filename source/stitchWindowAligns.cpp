@@ -5,7 +5,7 @@
 #include <cmath>
 #include <ctime>
 
-void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript trA, \
+void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript &trA, \
                         uint Lread, uiWA* WA, char* R, Genome &mapGen, \
                         Parameters& P, Transcript** wTr, uint* nWinTr, ReadAlign *RA) {
     //recursively stitch aligns for one gene
@@ -309,7 +309,8 @@ void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, ui
 
     ///////////////////////////////////////////////////////////////////////////////////
     int dScore=0;
-    Transcript trAi=trA; //trA copy with this align included, to be used in the 1st recursive call of StitchAlign
+    Transcript trAi; //trA stitch-core copy with this align included
+    trAi.copyStitchCore(trA);
     if (trA.nExons>0) {//stitch, a transcript has already been originated
 
         dScore=stitchAlignToTranscript(tR2, tG2, WA[iA][WA_rStart], WA[iA][WA_gStart], WA[iA][WA_Length], WA[iA][WA_iFrag],  WA[iA][WA_sjA], P, R, mapGen, &trAi, RA->outFilterMismatchNmaxTotal);
