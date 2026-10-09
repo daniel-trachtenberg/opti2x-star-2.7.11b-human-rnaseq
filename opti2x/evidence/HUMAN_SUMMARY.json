@@ -1,0 +1,31 @@
+{
+  "track": "human_SRR393763_hg38_chr21_22",
+  "run": "SRR393763",
+  "reads": 20000,
+  "reads_note": "First 20k PE of SRR393763; random 200k hung ~9+min at read~64050 (pathological multimapper). 20k completes stably ~195s baseline.",
+  "genome": "hg38_chr21_22",
+  "baseline_s": [
+    198.863044,
+    196.94734,
+    198.163524
+  ],
+  "candidate_s": [
+    107.664623,
+    107.710348,
+    107.235201
+  ],
+  "paired_x": [
+    1.8470602363043616,
+    1.8284904250796776,
+    1.8479335344370733
+  ],
+  "median_paired_x": 1.8470602363043616,
+  "exp_mean_log_x": 1.841139513471667,
+  "unique_map_pct": 5.05,
+  "too_short_pct": 94.59,
+  "mapping_speed_M_per_hr_baseline": 0.36,
+  "mapping_speed_M_per_hr_candidate": 0.67,
+  "envelope": "serial runThreadN=1 OMP=1 taskset-c0 NoSharedMemory warm-cache",
+  "public_candidate_sha": "e81942dae047b0ac103f08edfbad37a54cf3f362",
+  "hang_note": "Full random 200k PE stuck with FASTQ pos frozen near SRR393763.64050 for >9min at 100% CPU; aborted. Documented; Phase A uses 20k."
+}

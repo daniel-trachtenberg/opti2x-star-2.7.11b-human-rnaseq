@@ -1,0 +1,86 @@
+# FROZEN Opti2x contract — STAR 2.7.11b serial align human RNA-seq
+# Frozen: 2026-10-06 PT by Opti2x executor (Zhang GSE26248 repro + human track)
+schema: 1
+contract_id: star-2.7.11b-serial-align-human-rnaseq-v1
+fixture_revision: 1
+project:
+  name: STAR
+  repository: https://github.com/alexdobin/STAR.git
+  baseline_ref: 2.7.11b
+  baseline_commit: b1edc1208d91a53bf40ebae8669f71d50b994851
+  license: MIT
+  homepage: https://github.com/alexdobin/STAR
+  prior_public_candidate: https://github.com/daniel-trachtenberg/opti2x-star-2.7.11b
+  prior_public_sha: e81942dae047b0ac103f08edfbad37a54cf3f362
+
+claim_scope: |
+  PRIMARY: serial paired-end RNA-seq align of Homo sapiens reads (SRR393763 /
+  SRP010061 K562 polyA subset) against hg38 chr21+chr22 STAR index under the
+  frozen serial resource envelope. QUALIFIED means ≥2× on this primary workload
+  only — not multi-thread, STARsolo, genomeGenerate-only, full GRCh38, or
+  package-wide claims.
+  SECONDARY (Zhang continuity): Mus musculus GSE26248/SRR327045 subset against
+  mm10 chr1+chr2+chr19. GSE26248 is mouse retina, not human — documented in
+  CLAIM_SCOPE / REPRO_ZHANG.md.
+  Chromosome-subset indexes and read subsets are explicit claim limits.
+
+build:
+  command: cd source && make clean && make STAR
+  artifact: source/STAR
+  notes: |
+    -fopenmp -pthread always. Serial via --runThreadN 1 + OS max_os_threads=1.
+    Prefer NoSharedMemory. Prebuilt bin/ untrusted for baseline claims.
+
+resources:
+  max_os_threads: 1
+  max_child_processes: 0
+  enforce: taskset-c0-plus-OMP_NUM_THREADS-1-plus-runThreadN-1
+  cli_thread_flag: --runThreadN 1
+  genomeLoad: NoSharedMemory
+  gpu: false
+  fresh_writable_layer_each_invocation: true
+  same_for_baseline_and_candidate: true
+  page_cache: warm
+
+correctness:
+  comparator: exact-files
+  allowed_normalization:
+    - id: strip-sam-header-pg-vn
+      description: narrow @PG VN normalizer only if needed; prefer BAM/SAM body
+  exit_code: 0
+  deterministic_runs: 3
+
+benchmarks:
+  warmups: 1
+  fixed_paired_rounds: 30
+  minimum_case_seconds: 1
+  paired_order: randomized-from-frozen-seed
+  estimator: weighted-mean-paired-log-speedup
+  confidence_bound: one-sided-student-t
+  confidence_level: 0.95
+  outlier_policy: retain-all
+  failed_run_policy: fail-candidate
+  timing_boundary: process-start-through-process-exit
+  primary_workloads:
+    - id: serial-align-human-rnaseq
+      weight: 1.0
+      description: SRR393763 PE subset vs hg38 chr21+22, serial envelope
+  secondary_workloads:
+    - id: serial-align-gse26248-mouse
+      weight: 0.0
+      description: Zhang continuity; not in aggregate score
+
+acceptance:
+  primary_min_case_speedup: 2.0
+  aggregate_speedup_lower_bound: 2.0
+  max_secondary_regression_percent: 5
+  correctness_required: true
+  resource_parity_required: true
+
+budgets:
+  maximum_experiments: 40
+  maximum_wall_hours: 24
+
+terminal_statuses:
+  - QUALIFIED
+  - NOT_YET

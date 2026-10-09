@@ -1,0 +1,24 @@
+{
+  "track": "GSE26248_mouse_retina",
+  "run": "SRR327045",
+  "reads": 200000,
+  "genome": "mm10_chr1_2_19",
+  "baseline_s": [
+    296.79778,
+    298.101532,
+    300.7409
+  ],
+  "candidate_s": [
+    213.234351,
+    219.151684,
+    214.423687
+  ],
+  "paired_x": [
+    1.3918854003030683,
+    1.3602520708898593,
+    1.4025544668486183
+  ],
+  "median_paired_x": 1.3918854003030683,
+  "unique_map_pct": 17.28,
+  "envelope": "serial runThreadN=1 OMP=1 taskset-c0 NoSharedMemory warm-cache"
+}

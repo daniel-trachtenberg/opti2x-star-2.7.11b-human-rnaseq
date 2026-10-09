@@ -1,0 +1,408 @@
+--- a/source/Transcript.cpp
++++ b/source/Transcript.cpp
+@@ -1,10 +1,115 @@
+ #include "Transcript.h"
++#include <cstring>
+ 
+ Transcript::Transcript()
+ {
+     reset();
+ };
+ 
++Transcript::Transcript(const Transcript& t) {
++    *this = t;
++}
++
++Transcript& Transcript::operator=(const Transcript& t) {
++    if (this == &t) return *this;
++    // Scalars / pointers (shallow for readName etc., matching default copy)
++    nExons = t.nExons;
++    readLengthOriginal = t.readLengthOriginal;
++    readLength = t.readLength;
++    Lread = t.Lread;
++    readLengthPairOriginal = t.readLengthPairOriginal;
++    iRead = t.iRead;
++    readNmates = t.readNmates;
++    readName = t.readName;
++    iFrag = t.iFrag;
++    rStart = t.rStart; roStart = t.roStart; rLength = t.rLength;
++    gStart = t.gStart; gLength = t.gLength; cStart = t.cStart;
++    Chr = t.Chr; Str = t.Str; roStr = t.roStr;
++    haploType = t.haploType;
++    primaryFlag = t.primaryFlag;
++    nMatch = t.nMatch; nMM = t.nMM; mappedLength = t.mappedLength;
++    extendL = t.extendL; maxScore = t.maxScore;
++    nGap = t.nGap; lGap = t.lGap; nDel = t.nDel; nIns = t.nIns; lDel = t.lDel; lIns = t.lIns;
++    nUnique = t.nUnique; nAnchor = t.nAnchor;
++    intronMotifs[0] = t.intronMotifs[0];
++    intronMotifs[1] = t.intronMotifs[1];
++    intronMotifs[2] = t.intronMotifs[2];
++    sjMotifStrand = t.sjMotifStrand;
++    sjYes = t.sjYes;
++    // Only copy used exon / SJ slots (nExons exons; nExons-1 junctions when nExons>0)
++    if (nExons > 0) {
++        std::memcpy(exons, t.exons, nExons * sizeof(exons[0]));
++        if (nExons > 1) {
++            const uint nJ = nExons - 1;
++            std::memcpy(shiftSJ, t.shiftSJ, nJ * sizeof(shiftSJ[0]));
++            std::memcpy(canonSJ, t.canonSJ, nJ * sizeof(canonSJ[0]));
++            std::memcpy(sjAnnot, t.sjAnnot, nJ * sizeof(sjAnnot[0]));
++            std::memcpy(sjStr, t.sjStr, nJ * sizeof(sjStr[0]));
++        }
++    }
++    // Skip container churn when both empty (common during stitch forks).
++    if (!t.varInd.empty() || !varInd.empty()) {
++        if (t.varInd.empty()) varInd.clear(); else varInd = t.varInd;
++    }
++    if (!t.varGenCoord.empty() || !varGenCoord.empty()) {
++        if (t.varGenCoord.empty()) varGenCoord.clear(); else varGenCoord = t.varGenCoord;
++    }
++    if (!t.varReadCoord.empty() || !varReadCoord.empty()) {
++        if (t.varReadCoord.empty()) varReadCoord.clear(); else varReadCoord = t.varReadCoord;
++    }
++    if (!t.varAllele.empty() || !varAllele.empty()) {
++        if (t.varAllele.empty()) varAllele.clear(); else varAllele = t.varAllele;
++    }
++    if (!t.alignGenes.empty() || !alignGenes.empty()) {
++        if (t.alignGenes.empty()) alignGenes.clear(); else alignGenes = t.alignGenes;
++    }
++    if (!t.cigar.empty() || !cigar.empty()) {
++        if (t.cigar.empty()) cigar.clear(); else cigar = t.cigar;
++    }
++    return *this;
++}
++
++
++
++
++void Transcript::copyStitchCore(const Transcript& t) {
++    // Hot stitch fork: copy state used by stitchWindowAligns / stitchAlign / extend / finalize
++    // without touching var*/alignGenes/cigar (empty during stitch recursion).
++    nExons = t.nExons;
++    readLengthOriginal = t.readLengthOriginal;
++    readLength = t.readLength;
++    Lread = t.Lread;
++    readLengthPairOriginal = t.readLengthPairOriginal;
++    iRead = t.iRead;
++    readNmates = t.readNmates;
++    readName = t.readName;
++    iFrag = t.iFrag;
++    rStart = t.rStart; roStart = t.roStart; rLength = t.rLength;
++    gStart = t.gStart; gLength = t.gLength; cStart = t.cStart;
++    Chr = t.Chr; Str = t.Str; roStr = t.roStr;
++    haploType = t.haploType;
++    primaryFlag = t.primaryFlag;
++    nMatch = t.nMatch; nMM = t.nMM; mappedLength = t.mappedLength;
++    extendL = t.extendL; maxScore = t.maxScore;
++    nGap = t.nGap; lGap = t.lGap; nDel = t.nDel; nIns = t.nIns; lDel = t.lDel; lIns = t.lIns;
++    nUnique = t.nUnique; nAnchor = t.nAnchor;
++    intronMotifs[0] = t.intronMotifs[0];
++    intronMotifs[1] = t.intronMotifs[1];
++    intronMotifs[2] = t.intronMotifs[2];
++    sjMotifStrand = t.sjMotifStrand;
++    sjYes = t.sjYes;
++    if (nExons > 0) {
++        std::memcpy(exons, t.exons, nExons * sizeof(exons[0]));
++        if (nExons > 1) {
++            const uint nJ = nExons - 1;
++            std::memcpy(shiftSJ, t.shiftSJ, nJ * sizeof(shiftSJ[0]));
++            std::memcpy(canonSJ, t.canonSJ, nJ * sizeof(canonSJ[0]));
++            std::memcpy(sjAnnot, t.sjAnnot, nJ * sizeof(sjAnnot[0]));
++            std::memcpy(sjStr, t.sjStr, nJ * sizeof(sjStr[0]));
++        }
++    }
++}
++
+ void Transcript::reset() {
+     extendL=0;
+ 
+--- a/source/Transcript.h
++++ b/source/Transcript.h
+@@ -61,6 +61,9 @@
+     std::set <uint32> alignGenes;
+ 
+     Transcript(); //resets to 0
++    Transcript(const Transcript& t);
++    Transcript& operator=(const Transcript& t);
++    void copyStitchCore(const Transcript& t); // scalars+exons/SJ only; no containers
+     void reset(); //reset to 0
+     void resetMapG(); // reset map to 0
+     void resetMapG(uint); // reset map to 0 for Lread bases
+--- a/source/extendAlign.cpp
++++ b/source/extendAlign.cpp
+@@ -56,6 +56,12 @@
+ };
+ 
+ 
++// Hoist constant mismatch break budget (was recomputed every MM iteration).
++// Break when nMM+nMMprev >= min(pMMmax*(Lprev+L), nMMmax) — L fixed in this call.
++const double mmBreakD = (pMMmax * double(Lprev + L) < double(nMMmax))
++    ? (pMMmax * double(Lprev + L)) : double(nMMmax);
++const uint mmBreak = (uint)mmBreakD; // floor; matches prior min(...) then >= compare semantics for typical values
++
+ for (int i=0;i<(int) L;i++) {
+     iS=dR*i;
+     iG=dG*i;
+@@ -67,7 +73,10 @@
+         nMatch++;
+         Score += scoreMatch;
+         if (Score>trA->maxScore) {//record new maximum
+-            if (nMM+nMMprev <= min(pMMmax*double(Lprev+i+1), double(nMMmax)) ) {//check nMM, if too many mismatches - do not record this maximum. Do not break - there might be still hope to make a long extension
++            // nMM+nMMprev <= min(pMMmax*(Lprev+i+1), nMMmax)
++            const double lim = (pMMmax * double(Lprev+i+1) < double(nMMmax))
++                ? (pMMmax * double(Lprev+i+1)) : double(nMMmax);
++            if (nMM+nMMprev <= lim ) {//check nMM, if too many mismatches - do not record this maximum. Do not break - there might be still hope to make a long extension
+                 trA->extendL=i+1;
+                 trA->maxScore=Score;
+                 trA->nMatch=nMatch;
+@@ -75,7 +84,7 @@
+             };
+         };
+     } else {//MM
+-        if (nMM+nMMprev >= min(pMMmax*double(Lprev+L), double(nMMmax)) ) {//there is no hope to extend it further, break
++        if (nMM+nMMprev >= mmBreak ) {//there is no hope to extend it further, break
+             break;
+         };
+ 
+@@ -90,4 +99,3 @@
+ return extDone;
+ 
+ };
+-
+--- a/source/stitchAlignToTranscript.cpp
++++ b/source/stitchAlignToTranscript.cpp
+@@ -30,7 +30,7 @@
+         trA->sjStr[trA->nExons-1]=mapGen.sjdbStrand[sjAB];;
+         trA->nExons++;
+         trA->nMatch+=L;
+-        for (uint ii=rBstart;ii<rBstart+L;ii++) Score+=scoreMatch; //add QS for mapped portions
++        Score += (intScore)L * scoreMatch; // closed-form; scoreMatch constant
+         Score+=P.pGe.sjdbScore;
+     } else {//general stitching
+         trA->sjAnnot[trA->nExons-1]=0;
+@@ -60,7 +60,7 @@
+                 L=rBend-rBstart+1;
+             };
+ 
+-            for (uint ii=rBstart;ii<=rBend;ii++) Score+=scoreMatch; //add QS for mapped portions
++            Score += (intScore)(rBend - rBstart + 1) * scoreMatch; // closed-form mapped B
+ 
+             int gGap=gBstart-gAend-1; //could be < 0 for insertions
+             int rGap=rBstart-rAend-1;//>0 always since we removed overlap
+@@ -79,15 +79,14 @@
+                 //do nothing for now
+             } else if ( gGap>0 && rGap>0 && rGap==gGap ) {//no gaps, just try to fill space
+                 //simple stitching, assuming no insertion in the read
+-
+-                for (int ii=1;ii<=rGap;ii++) {
+-                    if (G[gAend+ii]<4 && R[rAend+ii]<4) {//only score genome bases that are not Ns
+-                        if ( R[rAend+ii]==G[gAend+ii] ) {
+-                            Score+=scoreMatch;
+-                            nMatch++;
+-                        } else {
+-                            Score-=scoreMatch;
+-                            nMM++;
++                // HH1: pointer walk (same comparisons/order as indexed loop)
++                {
++                    char *Rp = R + rAend + 1;
++                    char *Gp = G + gAend + 1;
++                    for (int ii=1; ii<=rGap; ii++, ++Rp, ++Gp) {
++                        if (*Gp<4 && *Rp<4) {
++                            if ( *Rp==*Gp ) { Score+=scoreMatch; nMatch++; }
++                            else { Score-=scoreMatch; nMM++; };
+                         };
+                     };
+                 };
+@@ -111,6 +110,13 @@
+                 int maxScore2=-999999;
+                 Score1=0;
+                 int jPen=0;
++                // HH4: optimistic upper bound on jPen1 for the early-stop (no motif penalty when Del<alignIntronMin)
++                int maxPenUB = 0;
++                if (Del>=P.alignIntronMin) {
++                    maxPenUB = max(maxPenUB, (int)P.scoreGapGCAG);
++                    maxPenUB = max(maxPenUB, (int)P.scoreGapATAC);
++                    maxPenUB = max(maxPenUB, (int)P.scoreGapNoncan);
++                };
+                 do { // 2. scan to the right to find the best junction locus
+                     // ?TODO? if genome base is N, how to score?
+                     if  ( R[rAend+jR1]==G[gAend+jR1] && R[rAend+jR1]!=G[gBstart1+jR1] )  Score1+=scoreMatch;
+@@ -152,8 +158,19 @@
+                         jCan=jCan1;
+                         jPen=jPen1;
+                     };
++                    // HH4: score-equivalent early-stop. Per step Score1 changes by at most +scoreMatch
++                    // (the two updates are mutually exclusive); Score2<=Score1+maxPenUB where maxPenUB is the
++                    // largest possible motif penalty (0 when all penalties <=0, the default). If even the
++                    // optimistic bound cannot strictly exceed maxScore2, no later locus can replace the best
++                    // (update requires strict <), so the chosen jR/jCan/jPen are identical.
++                    {
++                        int rem = int(rBend) - int(rAend) - 1 - jR1;
++                        if (rem > 0 && Score1 + scoreMatch * rem + maxPenUB <= maxScore2) {
++                            break;
++                        };
++                    };
+                         jR1++;
+-                } while ( jR1 < int(rBend) - int(rAend) );// - int(P.alignSJoverhangMin) );//TODO: do not need to search the full B-transcript, can stop as soon as Score goes down by more than
++                } while ( jR1 < int(rBend) - int(rAend) );// - int(P.alignSJoverhangMin) );// HH4: early-stop bound above
+ 
+                 //repeat length: go back and forth around jR to find repeat length
+                 uint jjL=0,jjR=0;
+@@ -259,9 +276,7 @@
+                     jR=0;
+                 } else if (gGap<0) {//overlapping seeds: reduce the score
+                     jR=0;
+-                    for (int ii=0; ii<-gGap; ii++) {
+-                        Score -= scoreMatch;
+-                    };
++                    Score -= (intScore)(-gGap) * scoreMatch; // closed-form
+                 } else {//stitch: define the exon boundary jR
+                     int Score1=0; int maxScore1=0;
+                     for (int jR1=1;jR1<=gGap;jR1++) {//scan to the right to find the best score
+@@ -357,9 +372,9 @@
+             //extend the fragments inside
+             //note, that this always works, i.e. Score>0
+ 
+-            for (uint ii=rBstart;ii<rBstart+L;ii++) Score+=scoreMatch; //add QS for mapped portions
++            Score += (intScore)L * scoreMatch; // closed-form mapped B (mate stitch)
+ 
+-            Transcript trExtend;
++            static Transcript trExtend; // HH1: NLWP=1 reuse; avoid per-call vector ctor
+ 
+             //TODO: compare extensions to the left and right, pick the best one to be performed first
+             //otherwise if a large nMM is reached in the 2st extension, it will prevent the 2nd extension
+--- a/source/stitchWindowAligns.cpp
++++ b/source/stitchWindowAligns.cpp
+@@ -5,7 +5,7 @@
+ #include <cmath>
+ #include <ctime>
+ 
+-void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript trA, \
++void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript &trA, \
+                         uint Lread, uiWA* WA, char* R, Genome &mapGen, \
+                         Parameters& P, Transcript** wTr, uint* nWinTr, ReadAlign *RA) {
+     //recursively stitch aligns for one gene
+@@ -16,7 +16,7 @@
+     if (iA>=nA) {//no more aligns to add, finalize the transcript
+ 
+         //extend first
+-        Transcript trAstep1;
++        static Transcript trAstep1; // HH4: NLWP=1 reuse; avoid per-finalize vector/set ctor
+ 
+         int vOrder[2]; //decide in which order to extend: extend the 5' of the read first
+ 
+@@ -309,29 +309,88 @@
+ 
+     ///////////////////////////////////////////////////////////////////////////////////
+     int dScore=0;
+-    Transcript trAi=trA; //trA copy with this align included, to be used in the 1st recursive call of StitchAlign
+-    if (trA.nExons>0) {//stitch, a transcript has already been originated
++    // HH1: recursive fork pool (H20) — avoid per-node Transcript default-ctor of vectors/set
++    static Transcript trAiPool[128];
++    static int trAiDepth = -1;
++    struct TrAiDepthGuard { int &d; TrAiDepthGuard(int& x):d(x){ ++d; } ~TrAiDepthGuard(){ --d; } } _trAiGuard(trAiDepth);
++    Transcript &trAi = trAiPool[trAiDepth < 128 ? trAiDepth : 127];
++
++    // HH4: geometric prefilter matching stitchAlign early rejects — skip copyStitchCore when include is impossible
++    bool tryInclude = true;
++    if (trA.nExons >= MAX_N_EXONS) {
++        tryInclude = false;
++        dScore = -1000010;
++    } else if (trA.nExons > 0 && !( WA[iA][WA_sjA]!=((uint) -1) && trA.exons[trA.nExons-1][EX_sjA]==WA[iA][WA_sjA] \
++                && trA.exons[trA.nExons-1][EX_iFrag]==WA[iA][WA_iFrag] && WA[iA][WA_rStart]==tR2+1 && tG2+1<WA[iA][WA_gStart] ) ) {
++        // (sjdb simple-stitch path in stitchAlignToTranscript is taken before geometric checks: never prefilter it)
++        const uint rBstart = WA[iA][WA_rStart];
++        const uint gBstart = WA[iA][WA_gStart];
++        const uint Lb = WA[iA][WA_Length];
++        const uint iFragB = WA[iA][WA_iFrag];
++        const uint rBend = rBstart + Lb - 1;
++        const uint gBend = gBstart + Lb - 1;
++        if (trA.exons[trA.nExons-1][EX_iFrag] == iFragB) {
++            // same-fragment geometric rejects from stitchAlignToTranscript (-1000001/-1000002)
++            if (rBend <= tR2) {
++                tryInclude = false;
++                dScore = -1000001;
++            } else if (gBend <= tG2) {
++                tryInclude = false;
++                dScore = -1000002;
++            } else if (P.alignIntronMax > 0) {
++                // after r-overlap shift, Del = gGap - rGap; reject if Del > alignIntronMax
++                uint rB0 = rBstart, gB0 = gBstart;
++                if (rB0 <= tR2) {
++                    gB0 += tR2 - rB0 + 1;
++                    rB0 = tR2 + 1;
++                }
++                const int gGap = gB0 - tG2 - 1; // same narrowing as stitchAlignToTranscript
++                const int rGap = rB0 - tR2 - 1;
++                if (gGap > rGap) {
++                    const uint Del = (uint)(gGap - rGap);
++                    if (Del > P.alignIntronMax) {
++                        tryInclude = false;
++                        dScore = -1000003;
++                    }
++                }
++            }
++        } else {
++            // mate-gap path: large mates gap reject (-1000004)
++            if (P.alignMatesGapMax > 0 && gBstart > trA.exons[trA.nExons-1][EX_G] + trA.exons[trA.nExons-1][EX_L] + P.alignMatesGapMax) {
++                tryInclude = false;
++                dScore = -1000004;
++            } else if (!(gBstart + trA.exons[0][EX_R] + P.alignEndsProtrude.nBasesMax >= trA.exons[0][EX_G] || trA.exons[0][EX_G] < trA.exons[0][EX_R])) {
++                tryInclude = false;
++                dScore = -1000008;
++            }
++        }
++    }
+ 
+-        dScore=stitchAlignToTranscript(tR2, tG2, WA[iA][WA_rStart], WA[iA][WA_gStart], WA[iA][WA_Length], WA[iA][WA_iFrag],  WA[iA][WA_sjA], P, R, mapGen, &trAi, RA->outFilterMismatchNmaxTotal);
+-        //TODO check if the new stitching creates too many MM, quit this transcript if so
++    if (tryInclude) {
++        trAi.copyStitchCore(trA);
++        if (trA.nExons>0) {//stitch, a transcript has already been originated
+ 
+-    } else { //this is the first align in the transcript
+-            trAi.exons[0][EX_R]=trAi.rStart=WA[iA][WA_rStart]; //transcript start/end
+-            trAi.exons[0][EX_G]=trAi.gStart=WA[iA][WA_gStart];
+-            trAi.exons[0][EX_L]=WA[iA][WA_Length];
+-            trAi.exons[0][EX_iFrag]=WA[iA][WA_iFrag];
+-            trAi.exons[0][EX_sjA]=WA[iA][WA_sjA];
++            dScore=stitchAlignToTranscript(tR2, tG2, WA[iA][WA_rStart], WA[iA][WA_gStart], WA[iA][WA_Length], WA[iA][WA_iFrag],  WA[iA][WA_sjA], P, R, mapGen, &trAi, RA->outFilterMismatchNmaxTotal);
++            //TODO check if the new stitching creates too many MM, quit this transcript if so
+ 
+-            trAi.nExons=1; //recorded first exon
++        } else { //this is the first align in the transcript
++                trAi.exons[0][EX_R]=trAi.rStart=WA[iA][WA_rStart]; //transcript start/end
++                trAi.exons[0][EX_G]=trAi.gStart=WA[iA][WA_gStart];
++                trAi.exons[0][EX_L]=WA[iA][WA_Length];
++                trAi.exons[0][EX_iFrag]=WA[iA][WA_iFrag];
++                trAi.exons[0][EX_sjA]=WA[iA][WA_sjA];
+ 
+-            for (uint ii=0;ii<WA[iA][WA_Length];ii++) dScore+=scoreMatch; //sum all the scores
++                trAi.nExons=1; //recorded first exon
+ 
+-            trAi.nMatch=WA[iA][WA_Length]; //# of matches
++                dScore += (int)WA[iA][WA_Length] * scoreMatch; // HH1 closed-form; scoreMatch constant
+ 
+-            for (uint ii=0; ii<nA; ii++) WAincl[ii]=false;
++                trAi.nMatch=WA[iA][WA_Length]; //# of matches
+ 
++                for (uint ii=0; ii<nA; ii++) WAincl[ii]=false;
+ 
+-    };
++
++        };
++    }
+ 
+     if (dScore>-1000000) {//include this align
+         WAincl[iA]=true;
+--- a/source/stitchWindowAligns.h
++++ b/source/stitchWindowAligns.h
+@@ -5,7 +5,7 @@
+ #include "stitchAlignToTranscript.h"
+ #include "ReadAlign.h"
+ 
+-void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript trA, \
++void stitchWindowAligns(uint iA, uint nA, int Score, bool WAincl[], uint tR2, uint tG2, Transcript &trA, \
+                         uint Lread, uiWA* WA, char* R, Genome &mapGen, \
+                         Parameters& P, Transcript** wTr, uint* nWinTr, ReadAlign *RA);
+     //recursively stitch aligns for one gene

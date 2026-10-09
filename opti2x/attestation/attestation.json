@@ -1,0 +1,16 @@
+{
+  "status": "QUALIFIED",
+  "contract_id": "star-2.7.11b-serial-align-human-rnaseq-v1",
+  "N": 30,
+  "seed": 20261006,
+  "median_x": 2.182398,
+  "exp_mean_log_x": 2.1791770360175238,
+  "lower_95_x": 2.162435541760244,
+  "candidate_sha256": "e6d576dccaed247aeca539b7d20f862b9db1d505f4b146624b72bc23589fde3f",
+  "baseline_sha256": "0f7b41f13bcaaea4168512f4fc57e7b1eab955e83aa6ace399198d2b3f3fcb08",
+  "stack": [
+    "public-H1-H2-H8-H10-H13",
+    "HH1",
+    "HH4"
+  ]
+}

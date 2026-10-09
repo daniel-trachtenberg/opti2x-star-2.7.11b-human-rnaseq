@@ -1,0 +1,5 @@
+run_accession	sample_accession	experiment_accession	scientific_name	library_strategy	library_layout	read_count	base_count	fastq_ftp	sra_ftp
+SRR342457	SAMN00691503	SRX088979	Mus musculus	RNA-Seq	PAIRED	25473434	6113624160	ftp.sra.ebi.ac.uk/vol1/fastq/SRR342/SRR342457/SRR342457_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR342/SRR342457/SRR342457_2.fastq.gz	
+SRR327045	SAMN00691502	SRX088978	Mus musculus	RNA-Seq	PAIRED	26552894	6372694560	ftp.sra.ebi.ac.uk/vol1/fastq/SRR327/SRR327045/SRR327045_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR327/SRR327045/SRR327045_2.fastq.gz	
+SRR327047	SAMN00691505	SRX088981	Mus musculus	RNA-Seq	PAIRED	25595642	6142954080	ftp.sra.ebi.ac.uk/vol1/fastq/SRR327/SRR327047/SRR327047_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR327/SRR327047/SRR327047_2.fastq.gz	
+SRR342458	SAMN00691504	SRX088980	Mus musculus	RNA-Seq	PAIRED	26546886	6371252640	ftp.sra.ebi.ac.uk/vol1/fastq/SRR342/SRR342458/SRR342458_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR342/SRR342458/SRR342458_2.fastq.gz	

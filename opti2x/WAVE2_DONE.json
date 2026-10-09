@@ -1,0 +1,9 @@
+{
+  "status": "QUALIFIED",
+  "deliverable": "/workspace/opti2x/runs/star-2.7.11b-human-rnaseq/deliverable-QUALIFIED",
+  "median_x": 2.182398,
+  "exp_mean_log_x": 2.1791770360175238,
+  "lower_95_x": 2.162435541760244,
+  "N": 30,
+  "seed": 20261006
+}
